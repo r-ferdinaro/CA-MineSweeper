@@ -47,10 +47,11 @@ function buildBoard() {
     setMinesNebsCount(gBoard)
 }
 
+// insert bombs into random cells
 function plantMines() {
     gBoard[1][1].isMine = true
     gBoard[2][2].isMine = true
-// Actual working function - will replace utilize later 
+// TODO: Actual working function - will replace utilize later 
     //    const cells = getBoardCells(gBoard)
 //
 //    for (let i = 0; i < gLevel.mines; i++) {
@@ -60,9 +61,38 @@ function plantMines() {
 //    }
 }
 
-// Count mines around each cell and set the cell's minesAroundCount.
+// count mines around each cell and set the cell's minesAroundCount.
 function setMinesNebsCount(board) {
+    for (let i = 0; i < board.length; i++) {
+        for (let j = 0; j < board[i].length; j++) {
+            const currCell = board[i][j]
+            const currCellPos = {i: i, j: j}
 
+            currCell.minesAroundCount = getCellNebsCount(board, currCellPos)
+        }
+    }
+}
+
+// count all neighboring bombs of a specific cell
+function getCellNebsCount(board, pos) {
+    const iLimit = pos.i + 2
+    const jLimit = pos.j + 2
+    let res = 0
+
+    for (let i = (pos.i - 1); i < iLimit; i++) {
+        for (let j = (pos.j - 1); j < jLimit; j++) {
+            if (
+                (i < 0 || j < 0) || 
+                (i === board.length || j === board[i].length) ||
+                (i === pos.i && j === pos.j)
+            ) continue
+            
+            const currCell = board[i][j]
+            if (currCell.isMine) res++
+        }
+    }
+
+    return res
 }
 
 // Called when a cell is clicked
