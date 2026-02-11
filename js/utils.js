@@ -9,7 +9,8 @@ function renderBoard(board) {
         for (let j = 0; j < board[i].length; j++) {
             const cell = board[i][j]
             
-            strHTML += `<td class="cell"></td>`
+            // TODO: remove displaying neighboring bombs by default!!
+            strHTML += `<td class="cell">${cell.minesAroundCount}</td>`
         }
         strHTML += '</tr>'
     }
@@ -19,6 +20,7 @@ function renderBoard(board) {
     elTable.innerHTML = strHTML
 }
 
+// get all board's cell positions inside array
 function getBoardCells(board) {
     const res = []
 
