@@ -1,24 +1,67 @@
 'use strict'
 
+const gGame = {}
+const gLevel = {
+    size: 4,
+    mines: 2
+}
 const gBoard = []
 
 // Called when page loads 
 function onInit() {
-
+    resetGameStats()
+    buildBoard()
+    renderBoard(gBoard)
 }
 
-// Builds the board - Set some mines, Call setMinesNegsCount(), Return & render the created board
+// reset gGame object's stats
+function resetGameStats() {
+    const freshStats = {
+        isOn: false,
+        revealedCount: 0,
+        markedCount: 0,
+        secsPassed: 0
+    }
+
+    Object.assign(gGame, freshStats)
+}
+
+// Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
 function buildBoard() {
-    
+    const size = gLevel.size
+
+    for (let i = 0; i < size; i++) {
+        gBoard.push([])
+
+        for (let j = 0; j < size; j++) {
+            gBoard[i][j] = {
+                minesAroundCount: 0,
+                isRevealed: false,
+                isMine: false,
+                isMarked: false
+            }
+        }
+    }
+
+    plantMines()
+    setMinesNebsCount(gBoard)
+}
+
+function plantMines() {
+    gBoard[1][1].isMine = true
+    gBoard[2][2].isMine = true
+// Actual working function - will replace utilize later 
+    //    const cells = getBoardCells(gBoard)
+//
+//    for (let i = 0; i < gLevel.mines; i++) {
+//        const randomCell = cells[getRandomInt(0, cells.length)]
+//        
+//        gBoard[randomCell.i][randomCell.j].isMine = true
+//    }
 }
 
 // Count mines around each cell and set the cell's minesAroundCount.
-function setMinesNegsCount(board) {
-
-}
-
-// Render the board as a <table> to the page
-function renderBoard(board) {
+function setMinesNebsCount(board) {
 
 }
 
