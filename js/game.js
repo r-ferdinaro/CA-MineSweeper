@@ -92,8 +92,9 @@ function getCellNebsCount(board, pos) {
 
 // Called when a cell is clicked
 function onCellClicked(elCell, i, j) {
+    if (gBoard[i][j].isRevealed) return
     // start game if needed
-    if (!gGame.isOn) {
+    if (!gGame.isOn && gGame.revealedCount === 0) {
         startGame(i, j)
     }
 
@@ -104,18 +105,21 @@ function onCellClicked(elCell, i, j) {
         elCell.innerText = '💣'
     } else {
         //TODO: revealed count should be executed recursively (per game functionality) later per each cell that has been revealed...
-        const elScore = document.querySelector('.score')
-        
+        gBoard[i][j].isRevealed = true
         gGame.revealedCount++
+
+        const elScore = document.querySelector('.score')
+
         elScore.innerText = String(gGame.revealedCount).padStart(3, '0')
         elCell.innerText = currCell.minesAroundCount
+
+        checkGameOver()
     }
 }
 
 // start game, plant mines (not in first cell), set neighboring mines, and start timer
 function startGame(i, j) {
     gGame.isOn = true
-    gBoard[i][j].isRevealed = true
     plantMines()
     setMinesNebsCount(gBoard)
 
@@ -132,7 +136,10 @@ function onCellMarked(elCell, i, j) {
 
 // The game ends when all mines are marked, and all the other cells are revealed
 function checkGameOver() {
-
+    if (gGame.markedCount === gLevel.mines && gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines)) {
+        clearInterval(gTimerInterval)
+        gGame.isOn = false
+    }
 }
 
 // When the user clicks a cell with no mines around, reveal not only that cell, but also its neighbors. 
