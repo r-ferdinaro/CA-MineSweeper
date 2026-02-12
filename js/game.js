@@ -6,18 +6,18 @@ const gLevel = {
     mines: 2
 }
 const gBoard = []
+let gTimerInterval
 
 // Called when page loads 
 function onInit() {
-    resetGameStats()
+    resetGameStats(false)
     buildBoard()
-    renderBoard(gBoard)
 }
 
 // reset gGame object's stats
-function resetGameStats() {
+function resetGameStats(isOn) {
     const freshStats = {
-        isOn: false,
+        isOn: isOn,
         revealedCount: 0,
         markedCount: 0,
         secsPassed: 0
@@ -42,23 +42,18 @@ function buildBoard() {
             }
         }
     }
-
-    plantMines()
-    setMinesNebsCount(gBoard)
+    renderBoard(gBoard)
 }
 
 // insert bombs into random cells
 function plantMines() {
-    gBoard[1][1].isMine = true
-    gBoard[2][2].isMine = true
-// TODO: Actual working function - will replace utilize later 
-    //    const cells = getBoardCells(gBoard)
-//
-//    for (let i = 0; i < gLevel.mines; i++) {
-//        const randomCell = cells[getRandomInt(0, cells.length)]
-//        
-//        gBoard[randomCell.i][randomCell.j].isMine = true
-//    }
+   const cells = getBoardCells(gBoard)
+
+    for (let i = 0; i < gLevel.mines; i++) {
+        const randomCell = cells[getRandomInt(0, cells.length)]
+        
+        gBoard[randomCell.i][randomCell.j].isMine = true
+    }
 }
 
 // count mines around each cell and set the cell's minesAroundCount.
@@ -97,7 +92,37 @@ function getCellNebsCount(board, pos) {
 
 // Called when a cell is clicked
 function onCellClicked(elCell, i, j) {
+    // start game if needed
+    if (!gGame.isOn) {
+        startGame(i, j)
+    }
 
+    const currCell = gBoard[i][j]
+    // throw a bomb or update score & cell's content
+    if (currCell.isMine) {
+        // TODO: replace later with functionality to show all mines, and finish the game.
+        elCell.innerText = '💣'
+    } else {
+        //TODO: revealed count should be executed recursively (per game functionality) later per each cell that has been revealed...
+        const elScore = document.querySelector('.score')
+        
+        gGame.revealedCount++
+        elScore.innerText = String(gGame.revealedCount).padStart(3, '0')
+        elCell.innerText = currCell.minesAroundCount
+    }
+}
+
+// start game, plant mines (not in first cell), set neighboring mines, and start timer
+function startGame(i, j) {
+    gGame.isOn = true
+    gBoard[i][j].isRevealed = true
+    plantMines()
+    setMinesNebsCount(gBoard)
+
+    const elTimer = document.querySelector('.timer');
+    const startTime = new Date().getTime();
+
+    gTimerInterval = setInterval(renderTimer, 1000, startTime, elTimer);
 }
 
 // Called when a cell is rightclicked - See how you can hide the context menu on right click
