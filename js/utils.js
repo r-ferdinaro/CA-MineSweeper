@@ -10,7 +10,7 @@ function renderBoard(board) {
             const cell = board[i][j]
             
             // TODO: add oncontextmenu
-            strHTML += `<td class="cell" onclick="onCellClicked(this, ${i}, ${j})"></td>`
+            strHTML += `<td class="cell" onclick="onCellClicked(this, ${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
         }
         strHTML += '</tr>'
     }

@@ -99,17 +99,24 @@ function onCellClicked(elCell, i, j) {
     // start game if needed
     if (gGame.firstClick) startGame(i, j)
     
-    // skip already revealed cells
-    if (gBoard[i][j].isRevealed) return
-
     const currCell = gBoard[i][j]
+
+    // skip already revealed cells
+    if (currCell.isRevealed || !gGame.isOn) return
+    currCell.isRevealed = true
+    
+    if (currCell.isMarked) {
+        currCell.isMarked = false
+        gGame.markedCount--
+    } 
+
     // throw a bomb or update score & cell's content
     if (currCell.isMine) {
         // TODO: replace later with functionality to show all mines, and finish the game.
+        checkGameOver(false)
         elCell.innerText = '💣'
     } else {
         //TODO: revealed count should be executed recursively (per game functionality) later per each cell that has been revealed...
-        gBoard[i][j].isRevealed = true
         gGame.revealedCount++
 
         const elScore = document.querySelector('.score')
@@ -117,7 +124,7 @@ function onCellClicked(elCell, i, j) {
         elScore.innerText = String(gGame.revealedCount).padStart(3, '0')
         elCell.innerText = currCell.minesAroundCount
 
-        checkGameOver()
+        checkGameOver(true)
     }
 }
 
@@ -135,17 +142,29 @@ function startGame(i, j) {
 }
 
 // Called when a cell is rightclicked - See how you can hide the context menu on right click
-// TODO: hide contextmenu on rightclick and detect right click for marking. - oncontextmenu="" functionality
-// TODO: add .preventDefault() to stop opening the context menu
-// TODO: if a cell has been revealed it cannot be un/marked
-// TODO: update cell is marked/unmarked and add/decreese gGame.markedCount value
-function onCellMarked(elCell, i, j) {
-
+// TODO: add/decreese gGame.markedCount value
+function onCellMarked(elCell, ev, i, j) {
+    ev.preventDefault(); 
+    
+    const currCell = gBoard[i][j]
+    if (currCell.isRevealed || !gGame.isOn) return
+    if (!currCell.isMarked) {
+        currCell.isMarked = true
+        gGame.markedCount++
+        elCell.innerText = '🚩'
+    } else {
+        currCell.isMarked = false
+        gGame.markedCount--
+        elCell.innerText = ''
+    }
 }
 
 // The game ends when all mines are marked, and all the other cells are revealed
-function checkGameOver() {
-    if (gGame.markedCount === gLevel.mines && gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines)) {
+// TODO: bombed mines will cause the game to never end - I should change calculation in that case if the game is not over (upon supporting 3 lives)
+function checkGameOver(isWon) {
+
+
+    if (!isWon || gGame.markedCount === gLevel.mines && gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines)) {
         clearInterval(gTimerInterval)
         gGame.isOn = false
     }
