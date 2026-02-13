@@ -1,7 +1,13 @@
 'use strict'
 
-const gGame = {}
-const gLevel = {
+let gGame = {
+    isOn: true,
+    revealedCount: 0,
+    markedCount: 0,
+    secsPassed: 0,
+    firstClick: true
+}
+let gLevel = {
     size: 4,
     mines: 2
 }
@@ -10,20 +16,15 @@ let gTimerInterval
 
 // Called when page loads 
 function onInit() {
-    resetGameStats(false)
-    buildBoard()
-}
-
-// reset gGame object's stats
-function resetGameStats(isOn) {
-    const freshStats = {
-        isOn: isOn,
-        revealedCount: 0,
-        markedCount: 0,
-        secsPassed: 0
+    gGame = {
+    isOn: true,
+    revealedCount: 0,
+    markedCount: 0,
+    secsPassed: 0,
+    firstClick: true
     }
 
-    Object.assign(gGame, freshStats)
+    buildBoard()
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
@@ -45,9 +46,9 @@ function buildBoard() {
     renderBoard(gBoard)
 }
 
-// insert bombs into random cells
-function plantMines() {
-   const cells = getBoardCells(gBoard)
+// insert bombs into random cells (skip first cell)
+function placeMines(firstCell) {
+   const cells = getBoardCells(gBoard, firstCell)
 
     for (let i = 0; i < gLevel.mines; i++) {
         const randomCell = cells[getRandomInt(0, cells.length)]
@@ -68,14 +69,18 @@ function setMinesNebsCount(board) {
     }
 }
 
+// TODO: make loops more readable and don't use +2 for limits
 // count all neighboring bombs of a specific cell
 function getCellNebsCount(board, pos) {
-    const iLimit = pos.i + 2
-    const jLimit = pos.j + 2
+    const iStart = pos.i - 1
+    const jStart = pos.j - 1
+    const iEnd = pos.i + 1
+    const jEnd = pos.j + 1
+
     let res = 0
 
-    for (let i = (pos.i - 1); i < iLimit; i++) {
-        for (let j = (pos.j - 1); j < jLimit; j++) {
+    for (let i = iStart; i <= iEnd; i++) {
+        for (let j = jStart; j <= jEnd; j++) {
             if (
                 (i < 0 || j < 0) || 
                 (i === board.length || j === board[i].length) ||
@@ -86,17 +91,16 @@ function getCellNebsCount(board, pos) {
             if (currCell.isMine) res++
         }
     }
-
     return res
 }
 
 // Called when a cell is clicked
 function onCellClicked(elCell, i, j) {
-    if (gBoard[i][j].isRevealed) return
     // start game if needed
-    if (!gGame.isOn && gGame.revealedCount === 0) {
-        startGame(i, j)
-    }
+    if (gGame.firstClick) startGame(i, j)
+    
+    // skip already revealed cells
+    if (gBoard[i][j].isRevealed) return
 
     const currCell = gBoard[i][j]
     // throw a bomb or update score & cell's content
@@ -120,7 +124,8 @@ function onCellClicked(elCell, i, j) {
 // start game, plant mines (not in first cell), set neighboring mines, and start timer
 function startGame(i, j) {
     gGame.isOn = true
-    plantMines()
+    gGame.firstClick = false
+    placeMines({i, j})
     setMinesNebsCount(gBoard)
 
     const elTimer = document.querySelector('.timer');
@@ -130,6 +135,10 @@ function startGame(i, j) {
 }
 
 // Called when a cell is rightclicked - See how you can hide the context menu on right click
+// TODO: hide contextmenu on rightclick and detect right click for marking. - oncontextmenu="" functionality
+// TODO: add .preventDefault() to stop opening the context menu
+// TODO: if a cell has been revealed it cannot be un/marked
+// TODO: update cell is marked/unmarked and add/decreese gGame.markedCount value
 function onCellMarked(elCell, i, j) {
 
 }

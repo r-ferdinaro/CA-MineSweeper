@@ -2,34 +2,34 @@
 
 // Render the board as a <table> to the page
 function renderBoard(board) {
-    let strHTML = '<table><tbody>'
+    let strHTML = ''
 
     for (let i = 0; i < board.length; i++) {
         strHTML += '<tr>'
         for (let j = 0; j < board[i].length; j++) {
             const cell = board[i][j]
             
-            // TODO: remove displaying neighboring bombs by default!!
+            // TODO: add oncontextmenu
             strHTML += `<td class="cell" onclick="onCellClicked(this, ${i}, ${j})"></td>`
         }
         strHTML += '</tr>'
     }
-    strHTML += '</table></tbody>'
 
-    const elTable = document.querySelector('.table-container')
+    const elTable = document.querySelector('tbody')
     elTable.innerHTML = strHTML
 }
 
-// get all board's cell positions inside array
-function getBoardCells(board) {
+// get all board's cell positions inside array (skip first clicked cell)
+function getBoardCells(board, firstCell) {
     const res = []
 
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
-            if (board[i][j].isRevealed !== true) res.push({i, j})
+            // TODO: ensure first clicked cell is not in res
+            if (i === firstCell.i && j === firstCell.j) continue
+            res.push({i, j})
         }
     }
-    
     return res
 }
 
