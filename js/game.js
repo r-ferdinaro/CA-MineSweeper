@@ -6,10 +6,7 @@
 // 3. Cell is unrevealed after 1 second
 // 4. User can mark/click on cell again.
 
-// TODO: show user if they won/lost on game over
-
-// TODO: Add smiley button (for restart) and show it's status - 🙂 (has lives), 😵 (no lives/lost), 🤩 (user won)
-// TODO: Support restarting game and render UI button upon game over (smiley button)
+// TODO: Improve UI if user won/lost on game over
 
 // TODO: Support levels - easy (4*4 & 2), Medium (8*8 & 14), Expert (12 * 12 & 32)
 
@@ -34,10 +31,21 @@ let gLevel = {
     size: 4,
     mines: 2
 }
-let gBoard = []
+const gGameStatus = {
+    alive: '🙂',
+    lose: '🤯',
+    win: '😎'
+}
 
-const gElScore = document.querySelector('.score')
+let gBoard = []
 let gTimerInterval
+
+const gElStatsContainer = document.querySelector('.stats-container')
+const gElStats = {
+    score: gElStatsContainer.querySelector('.score'),
+    playerStatus: gElStatsContainer.querySelector('.player-status'),
+    timer: gElStatsContainer.querySelector('.timer')
+}
 
 // Called when page loads 
 function onInit() {
@@ -50,8 +58,15 @@ function onInit() {
         firstClick: true,
         mineCells: []
     }
-
+    
+    // clear timer and build board
+    clearInterval(gTimerInterval)
     buildBoard()
+
+    // render UI on fresh game stats
+    gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
+    gElStats.timer.innerText = String(gGame.secsPassed).padStart(3, '0')
+    gElStats.playerStatus.innerText = gGameStatus.alive
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
@@ -127,7 +142,7 @@ function onCellClicked(elCell, i, j) {
     if (currCell.isMine) {
         // TODO: Should change behavior to trigger only when all lives are lost
         revealMines({i, j})
-        checkGameOver(false)
+        checkGameOver(true)
         return
     }
 
@@ -139,9 +154,9 @@ function onCellClicked(elCell, i, j) {
     if (currCell.minesAroundCount === 0) expandReveal({i, j})
 
     // update score upon revealing cell
-    gElScore.innerText = String(gGame.revealedCount).padStart(3, '0')
+    gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
 
-    checkGameOver(true)
+    checkGameOver(false)
 }
 
 // start game, plant mines (not in first cell), set neighboring mines, and start timer
@@ -151,10 +166,9 @@ function startGame(i, j) {
     placeMines({i, j})
     setMinesNebsCount(gBoard)
 
-    const elTimer = document.querySelector('.timer');
     const startTime = new Date().getTime();
 
-    gTimerInterval = setInterval(renderTimer, 1000, startTime, elTimer);
+    gTimerInterval = setInterval(renderTimer, 1000, startTime, gElStats.timer);
 }
 
 // Called when a cell is rightclicked - See how you can hide the context menu on right click
@@ -170,7 +184,7 @@ function onCellMarked(elCell, ev, i, j) {
         gGame.markedCount++
         elCell.innerText = '🚩'
         
-        checkGameOver(true)
+        checkGameOver(false)
     } else {
         currCell.isMarked = false
         gGame.markedCount--
@@ -191,19 +205,19 @@ function expandReveal(pos) {
         
         revealCell(currCell)
         renderRevealedCell(currCellIdx, currCell)
-        gElScore.innerText = String(gGame.revealedCount).padStart(3, '0')
+        gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
             
         if (currCell.minesAroundCount === 0) expandReveal({i : currCellIdx.i, j: currCellIdx.j})
     }
 }
 
 // The game ends when all mines are marked, and all the other cells are revealed
-function checkGameOver(isCellClick) {
+function checkGameOver(isMineClick) {
     let isWon = false
 
     // TODO: I should change calculation in case mine is clicked if the game is not over (upon supporting 3 lives)
     // If a mine is clicked, the calculation count should decrease by 1
-    if (isCellClick) {
+    if (!isMineClick) {
         const allMinesMarked = gGame.markedCount === gLevel.mines
         const allCellsRevealed = gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines)
 
@@ -213,4 +227,5 @@ function checkGameOver(isCellClick) {
     
     clearInterval(gTimerInterval)
     gGame.isOn = false
+    gElStats.playerStatus.innerText = (isWon) ? gGameStatus.win : gGameStatus.lose
 }
