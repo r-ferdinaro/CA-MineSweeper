@@ -10,7 +10,7 @@ function renderBoard(board) {
             const cell = board[i][j]
             
             // TODO: add oncontextmenu
-            strHTML += `<td class="cell" onclick="onCellClicked(this, ${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
+            strHTML += `<td data-i="" data-pos="${i}-${j}" class="cell" onclick="onCellClicked(this, ${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
         }
         strHTML += '</tr>'
     }
@@ -31,6 +31,49 @@ function getBoardCells(board, firstCell) {
         }
     }
     return res
+}
+
+// provide a cell and return all of its valid neighboring cells
+function getNeighboringCells(pos){
+    const iStart = pos.i - 1
+    const jStart = pos.j - 1
+    const iEnd = pos.i + 1
+    const jEnd = pos.j + 1
+
+    const res = []
+
+    for (let i = iStart; i <= iEnd; i++) {
+        for (let j = jStart; j <= jEnd; j++) {
+            if (
+                (i < 0 || j < 0) || 
+                (i === gBoard.length || j === gBoard[i].length) ||
+                (i === pos.i && j === pos.j)
+            ) continue
+            
+            res.push({i, j})
+        }
+    }
+    return res
+}
+
+// reveal a cell & change game stats
+function revealCell(cell) {
+    cell.isRevealed = true
+
+    if (cell.isMarked) {
+        cell.isMarked = false
+        gGame.markedCount--
+    }
+
+    if (!cell.isMine) gGame.revealedCount++
+}
+
+// render revealed cell in UI
+function renderRevealedCell(pos, cell) {
+    const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
+
+    elCell.style.backgroundColor = 'darkgray'
+    elCell.innerText = cell.minesAroundCount || ''
 }
 
 // Display live Timer values
