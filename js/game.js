@@ -27,7 +27,8 @@ let gGame = {
     revealedCount: 0,
     markedCount: 0,
     secsPassed: 0,
-    firstClick: true
+    firstClick: true,
+    mineCells: []
 }
 let gLevel = {
     size: 4,
@@ -46,7 +47,8 @@ function onInit() {
         revealedCount: 0,
         markedCount: 0,
         secsPassed: 0,
-        firstClick: true
+        firstClick: true,
+        mineCells: []
     }
 
     buildBoard()
@@ -80,6 +82,7 @@ function placeMines(firstCell) {
         const randomCell = cells.splice(randomIdx, 1)[0]
         
         gBoard[randomCell.i][randomCell.j].isMine = true
+        gGame.mineCells.push({i: randomCell.i, j: randomCell.j})
     }
 }
 
@@ -122,9 +125,9 @@ function onCellClicked(elCell, i, j) {
 
     // end game if clicking on a mine
     if (currCell.isMine) {
-        // TODO: replace later with functionality to show all mines, and finish the game.
+        // TODO: Should change behavior to trigger only when all lives are lost
+        revealMines({i, j})
         checkGameOver(false)
-        elCell.innerText = '💣'
         return
     }
 

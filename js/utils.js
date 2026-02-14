@@ -76,6 +76,17 @@ function renderRevealedCell(pos, cell) {
     elCell.innerText = cell.minesAroundCount || ''
 }
 
+function revealMines(clickedMine) {
+    for (let i = 0; i < gGame.mineCells.length; i++) {
+        const currMine = gGame.mineCells[i]
+        const isClickedMine = currMine.i === clickedMine.i && currMine.j === clickedMine.j
+        const elCell = document.querySelector(`[data-pos="${currMine.i}-${currMine.j}"]`)
+        
+        elCell.innerText = '💣'
+        elCell.style.backgroundColor = (isClickedMine) ? 'crimson' : 'darkgray' 
+    }
+}
+
 // Display live Timer values
 function renderTimer(startTime, elTimer) {
     const currTime = new Date().getTime();
