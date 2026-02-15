@@ -8,8 +8,6 @@
 
 // TODO: Improve UI if user won/lost on game over
 
-// TODO: Support levels - easy (4*4 & 2), Medium (8*8 & 14), Expert (12 * 12 & 32)
-
 // TODO: Think of a better option allowing to remove data-pos-x-x from elements
 
 // BONUS
@@ -22,9 +20,9 @@
 // 7. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 const gModes = {
-    easy: {size: 4, mines: 2},
-    medium: {size: 8, mines: 14},
-    expert: {size: 12, mines: 32}
+    easy: {size: 4, mines: 2, lives: 1},
+    medium: {size: 8, mines: 14, lives: 2},
+    expert: {size: 12, mines: 32, lives: 3}
 }
 let gameMode
 let gLevel = {
@@ -33,6 +31,7 @@ let gLevel = {
 }
 let gGame = {
     isOn: true,
+    lives: 0,
     revealedCount: 0,
     markedCount: 0,
     secsPassed: 0,
@@ -52,11 +51,13 @@ const gElStatsContainer = document.querySelector('.stats-container')
 const gElStats = {
     score: gElStatsContainer.querySelector('.score'),
     playerStatus: gElStatsContainer.querySelector('.player-status'),
+    livesCounter: gElStatsContainer.querySelector('.lives-count'),
     timer: gElStatsContainer.querySelector('.timer')
 }
 
 // Called when page loads 
 function onInit(mode) {
+    // reset all stats
     gameMode = (mode) ? setMode(mode) : gameMode
     gLevel = {
         size: gameMode.size,
@@ -64,6 +65,7 @@ function onInit(mode) {
     }
     gGame = {
         isOn: true,
+        lives: gameMode.lives,
         revealedCount: 0,
         markedCount: 0,
         secsPassed: 0,
@@ -71,8 +73,9 @@ function onInit(mode) {
         mineCells: []
     }
     gBoard = []
-    
-    // clear timer and build board
+    updateLives(false)
+
+    // clear timer, lives, and build board
     clearInterval(gTimerInterval)
     buildBoard()
 
@@ -82,8 +85,24 @@ function onInit(mode) {
     gElStats.playerStatus.innerText = gGameStatus.alive
 }
 
+// set game's level
 function setMode(mode) {
     return gModes[mode]
+}
+
+// update & render user's current lives.
+function updateLives(isMineClick) {
+    if (isMineClick) gGame.lives--
+
+    let str = ''
+
+    for (let i = 0; i < gameMode.lives; i++) {
+        str+= (i < gGame.lives) ? '❤️' : '💔'
+    }
+    gElStats.livesCounter.innerText = str
+
+    // end game
+    if (isMineClick && gGame.lives === 0) checkGameOver(true)
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
@@ -158,8 +177,8 @@ function onCellClicked(elCell, i, j) {
     // end game if clicking on a mine
     if (currCell.isMine) {
         // TODO: Should change behavior to trigger only when all lives are lost
-        revealMines({i, j})
-        checkGameOver(true)
+        updateLives(true)
+        renderClickedMine({i, j})
         return
     }
 
@@ -188,14 +207,16 @@ function startGame(i, j) {
     gTimerInterval = setInterval(renderTimer, 1000, startTime, gElStats.timer);
 }
 
-// Called when a cell is rightclicked - See how you can hide the context menu on right click
-// TODO: add/decreese gGame.markedCount value
+// user can mark potential bombs
 function onCellMarked(elCell, ev, i, j) {
     const currCell = gBoard[i][j]
     
     ev.preventDefault(); 
     
+    // can't mark revealed cells or mark any cell if game is over
     if (currCell.isRevealed || !gGame.isOn) return
+    
+    // render if cell is marked in UI
     if (!currCell.isMarked) {
         currCell.isMarked = true
         gGame.markedCount++
@@ -207,6 +228,25 @@ function onCellMarked(elCell, ev, i, j) {
         gGame.markedCount--
         elCell.innerText = ''
     }
+    elCell.classList.toggle('revealed')
+}
+
+// display clicked mines to user
+function renderClickedMine(pos){
+    const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
+
+    elCell.classList.toggle('revealed')
+    elCell.innerText = '💣'
+    elCell.style.backgroundColor = 'crimson'
+
+    if (gGame.lives === 0) return
+    
+    // hide mine if game is not over, and allow user to mark it
+    setTimeout( () => {
+        elCell.classList.toggle('revealed')
+        elCell.innerText = ''
+        elCell.style.backgroundColor = 'whitesmoke'
+    }, 1000)
 }
 
 // When the user clicks a cell with no mines around, reveal not only that cell, but also its neighbors. 
@@ -232,17 +272,20 @@ function expandReveal(pos) {
 function checkGameOver(isMineClick) {
     let isWon = false
 
-    // TODO: I should change calculation in case mine is clicked if the game is not over (upon supporting 3 lives)
-    // If a mine is clicked, the calculation count should decrease by 1
+    // check if user finished game
     if (!isMineClick) {
-        const allMinesMarked = gGame.markedCount === gLevel.mines
-        const allCellsRevealed = gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines)
+        // check if user marked all remaining bombs and clicked on all of the non-mine cells
+        const areAllMinesMarked = (gGame.markedCount === gLevel.mines)
+        const areAllCellsRevealed = (gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines))
 
-        if (!allMinesMarked || !allCellsRevealed) return
+        // return if user has not marked mines and clicked on all cells
+        if (!areAllMinesMarked || !areAllCellsRevealed) return
         isWon = true        
     }
     
+    // finish game
     clearInterval(gTimerInterval)
+    if (!isWon) revealMines()
     gGame.isOn = false
     gElStats.playerStatus.innerText = (isWon) ? gGameStatus.win : gGameStatus.lose
 }
