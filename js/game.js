@@ -1,23 +1,16 @@
 'use strict'
 
-// TODO: Support 3 lives and display in UI
-// 1. better UI indication on mine click (1 heart lost)
-// 2. lives counter decrease from gGame
-// 3. Cell is unrevealed after 1 second
-// 4. User can mark/click on cell again.
+// BONUS
+// 1. 3 hints - user can select a cell and have it and its neighbors unrevealed for 1.5 seconds
+// 2. Best score - store values per 6 best (players?) per level in local storage
+// 3. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
+// 4. Undo button - he user can undo (some of) his moves ??
+// 5. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
+// 6. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 // TODO: Improve UI if user won/lost on game over
 
 // TODO: Think of a better option allowing to remove data-pos-x-x from elements
-
-// BONUS
-// 1. 3 hints - user can select a cell and have it and its neighbors unrevealed for 1.5 seconds
-// 2. Best score - store values per 6 best (players?) per level in local storage
-// 3. Full expand - If a cell with 0 mines is clicked, reveal it's neighbors, recursive operation for neighbors
-// 4. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
-// 5. Undo button - he user can undo (some of) his moves ??
-// 6. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
-// 7. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 const gModes = {
     easy: {size: 4, mines: 2, lives: 1},
