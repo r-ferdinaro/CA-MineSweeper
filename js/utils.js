@@ -76,17 +76,17 @@ function renderRevealedCell(pos, cell) {
     elCell.innerText = cell.minesAroundCount || ''
 }
 
-// TODO: Should change behavior to trigger only when all lives are lost
 // Show all mines upon losing game
-function revealMines(clickedMine) {
+function revealMines() {
     for (let i = 0; i < gGame.mineCells.length; i++) {
         const currMine = gGame.mineCells[i]
-        const isClickedMine = currMine.i === clickedMine.i && currMine.j === clickedMine.j
         const elCell = document.querySelector(`[data-pos="${currMine.i}-${currMine.j}"]`)
+
+        if (elCell.classList.contains('revealed')) continue
         
         elCell.classList.add('revealed')
         elCell.innerText = '💣'
-        elCell.style.backgroundColor = (isClickedMine) ? 'crimson' : 'darkgray' 
+        elCell.style.backgroundColor = 'darkgray' 
     }
 }
 

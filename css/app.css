@@ -14,6 +14,7 @@ table {
     padding: 10px 10px;
     margin: 50px auto;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .stats-container {
@@ -44,6 +45,10 @@ table {
 }
 
 .cell.revealed {
+    cursor: default;
+}
+
+.cell.marked {
     cursor: default;
 }
 
