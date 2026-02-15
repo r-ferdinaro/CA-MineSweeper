@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="css/app.css">
     <title>MineSweeper - Ran Ferdinaro</title>
 </head>
-<body onload="onInit()">
+<body onload="onInit('easy')">
     <h1>MineSweeper</h1>
     <div class="game-container">
         <div class="stats-container">
@@ -20,6 +20,11 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    <div class="levels-container">
+        <button onclick="onInit('easy')">Easy</button>
+        <button onclick="onInit('medium')">Medium</button>
+        <button onclick="onInit('expert')">Expert</button>
     </div>
 
     

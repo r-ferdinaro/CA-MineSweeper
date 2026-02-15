@@ -9,7 +9,6 @@ function renderBoard(board) {
         for (let j = 0; j < board[i].length; j++) {
             const cell = board[i][j]
             
-            // TODO: add oncontextmenu
             strHTML += `<td data-i="" data-pos="${i}-${j}" class="cell" onclick="onCellClicked(this, ${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
         }
         strHTML += '</tr>'
@@ -72,6 +71,7 @@ function revealCell(cell) {
 function renderRevealedCell(pos, cell) {
     const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
 
+    elCell.classList.add('revealed')
     elCell.style.backgroundColor = 'darkgray'
     elCell.innerText = cell.minesAroundCount || ''
 }
@@ -84,6 +84,7 @@ function revealMines(clickedMine) {
         const isClickedMine = currMine.i === clickedMine.i && currMine.j === clickedMine.j
         const elCell = document.querySelector(`[data-pos="${currMine.i}-${currMine.j}"]`)
         
+        elCell.classList.add('revealed')
         elCell.innerText = '💣'
         elCell.style.backgroundColor = (isClickedMine) ? 'crimson' : 'darkgray' 
     }

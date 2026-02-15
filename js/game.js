@@ -10,6 +10,8 @@
 
 // TODO: Support levels - easy (4*4 & 2), Medium (8*8 & 14), Expert (12 * 12 & 32)
 
+// TODO: Think of a better option allowing to remove data-pos-x-x from elements
+
 // BONUS
 // 1. 3 hints - user can select a cell and have it and its neighbors unrevealed for 1.5 seconds
 // 2. Best score - store values per 6 best (players?) per level in local storage
@@ -19,6 +21,16 @@
 // 6. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
 // 7. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
+const gModes = {
+    easy: {size: 4, mines: 2},
+    medium: {size: 8, mines: 14},
+    expert: {size: 12, mines: 32}
+}
+let gameMode
+let gLevel = {
+    size: 4,
+    mines: 2
+}
 let gGame = {
     isOn: true,
     revealedCount: 0,
@@ -26,10 +38,6 @@ let gGame = {
     secsPassed: 0,
     firstClick: true,
     mineCells: []
-}
-let gLevel = {
-    size: 4,
-    mines: 2
 }
 const gGameStatus = {
     alive: '🙂',
@@ -48,8 +56,12 @@ const gElStats = {
 }
 
 // Called when page loads 
-function onInit() {
-    gBoard = []
+function onInit(mode) {
+    gameMode = (mode) ? setMode(mode) : gameMode
+    gLevel = {
+        size: gameMode.size,
+        mines: gameMode.mines
+    }
     gGame = {
         isOn: true,
         revealedCount: 0,
@@ -58,6 +70,7 @@ function onInit() {
         firstClick: true,
         mineCells: []
     }
+    gBoard = []
     
     // clear timer and build board
     clearInterval(gTimerInterval)
@@ -67,6 +80,10 @@ function onInit() {
     gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
     gElStats.timer.innerText = String(gGame.secsPassed).padStart(3, '0')
     gElStats.playerStatus.innerText = gGameStatus.alive
+}
+
+function setMode(mode) {
+    return gModes[mode]
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
