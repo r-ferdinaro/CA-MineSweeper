@@ -1,3 +1,5 @@
+'use strict'
+
 // reveal a cell & change game stats
 function revealCell(pos, cell) {
     cell.isRevealed = true
