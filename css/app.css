@@ -18,10 +18,13 @@ table {
 }
 
 .stats-container {
-    margin: 0 auto 10px;
+    margin: 0 auto 0;
     font-size: x-large;
-    padding: 8px 0;
     border: 1px solid rgba(128, 128, 128, 0.576);
+}
+
+.stats-container div {
+    margin: 10px auto;
 }
 
 .stats-container span {
@@ -31,8 +34,12 @@ table {
     cursor: default;
 }
 
-.stats-container .player-status {
+.stats-container .btn {
     cursor: pointer;
+}
+
+.hint-mode {
+    background-color: #c2aa0b;
 }
 
 .cell {

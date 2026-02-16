@@ -1,21 +1,16 @@
 'use strict'
 
 // BONUS
-// 1. 3 hints - user can select a cell and have it and its neighbors unrevealed for 1.5 seconds
-// 2. Best score - store values per 6 best (players?) per level in local storage
-// 3. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
-// 4. Undo button - he user can undo (some of) his moves ??
-// 5. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
-// 6. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
-
-// TODO: Improve UI if user won/lost on game over
-
-// TODO: Think of a better option allowing to remove data-pos-x-x from elements
+// 1. Best score - store values per 6 best (players?) per level in local storage
+// 2. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
+// 3. Undo button - he user can undo (some of) his moves ??
+// 4. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
+// 5. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 const gModes = {
-    easy: {size: 4, mines: 2, lives: 1},
-    medium: {size: 8, mines: 14, lives: 2},
-    expert: {size: 12, mines: 32, lives: 3}
+    easy: {size: 4, mines: 2, lives: 1, hints: 3},
+    medium: {size: 8, mines: 14, lives: 2, hints: 3},
+    expert: {size: 12, mines: 32, lives: 3, hints: 3}
 }
 let gameMode
 let gLevel = {
@@ -25,6 +20,8 @@ let gLevel = {
 let gGame = {
     isOn: true,
     lives: 0,
+    hints: 3,
+    hintMode: false,
     revealedCount: 0,
     markedCount: 0,
     secsPassed: 0,
@@ -44,14 +41,15 @@ const gElStatsContainer = document.querySelector('.stats-container')
 const gElStats = {
     score: gElStatsContainer.querySelector('.score'),
     playerStatus: gElStatsContainer.querySelector('.player-status'),
+    timer: gElStatsContainer.querySelector('.timer'),
+    hintsCounter: gElStatsContainer.querySelector('.hints-count'),
     livesCounter: gElStatsContainer.querySelector('.lives-count'),
-    timer: gElStatsContainer.querySelector('.timer')
 }
 
 // Called when page loads 
 function onInit(mode) {
     // reset all stats
-    gameMode = (mode) ? setMode(mode) : gameMode
+    gameMode = (mode) ? gModes[mode] : gameMode
     gLevel = {
         size: gameMode.size,
         mines: gameMode.mines
@@ -59,6 +57,8 @@ function onInit(mode) {
     gGame = {
         isOn: true,
         lives: gameMode.lives,
+        hints: 3,
+        hintMode: false,
         revealedCount: 0,
         markedCount: 0,
         secsPassed: 0,
@@ -66,7 +66,8 @@ function onInit(mode) {
         mineCells: []
     }
     gBoard = []
-    updateLives(false)
+    updateLivesCount(true)
+    updateHintsCount(true)
 
     // clear timer, lives, and build board
     clearInterval(gTimerInterval)
@@ -76,26 +77,8 @@ function onInit(mode) {
     gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
     gElStats.timer.innerText = String(gGame.secsPassed).padStart(3, '0')
     gElStats.playerStatus.innerText = gGameStatus.alive
-}
-
-// set game's level
-function setMode(mode) {
-    return gModes[mode]
-}
-
-// update & render user's current lives.
-function updateLives(isMineClick) {
-    if (isMineClick) gGame.lives--
-
-    let str = ''
-
-    for (let i = 0; i < gameMode.lives; i++) {
-        str+= (i < gGame.lives) ? '❤️' : '💔'
-    }
-    gElStats.livesCounter.innerText = str
-
-    // end game
-    if (isMineClick && gGame.lives === 0) checkGameOver(true)
+    gElStats.hintsCounter.classList.add('btn')
+    gElStats.hintsCounter.classList.remove('hint-mode')
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
@@ -115,6 +98,54 @@ function buildBoard() {
         }
     }
     renderBoard(gBoard)
+}
+
+// Called when a cell is clicked
+function onCellClicked(i, j) {
+    // start game if needed
+    if (gGame.firstClick) startGame(i, j)
+    
+    const currCell = gBoard[i][j]
+
+    // skip already revealed/marked cells and don't play if game is over
+    if (currCell.isRevealed || currCell.isMarked || !gGame.isOn) return
+
+    // use hint
+    if (gGame.hintMode) {
+        updateHintsCount(false)
+        hintReveal({i, j})
+        return
+    }
+
+    // reduce lives upon clicking on a mine
+    if (currCell.isMine) {
+        updateLivesCount(false)
+        renderClickedMine({i, j})
+        return
+    }
+
+    // reveal and render cell
+    revealCell({i, j}, currCell)
+    
+    // reveal neighboring non-mine cells mines count
+    if (currCell.minesAroundCount === 0) expandReveal({i, j})
+
+    // update score upon revealing cell
+    gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
+
+    checkGameOver(false)
+}
+
+// start game, plant mines (not in first cell), set neighboring mines, and start timer
+function startGame(i, j) {
+    gGame.isOn = true
+    gGame.firstClick = false
+    placeMines({i, j})
+    setMinesNebsCount(gBoard)
+
+    const startTime = new Date().getTime();
+
+    gTimerInterval = setInterval(renderTimer, 1000, startTime, gElStats.timer);
 }
 
 // insert bombs into random cells (skip first cell)
@@ -157,47 +188,55 @@ function getCellNebsCount(pos) {
     return res
 }
 
-// Called when a cell is clicked
-function onCellClicked(elCell, i, j) {
-    // start game if needed
-    if (gGame.firstClick) startGame(i, j)
+// change hint mode upon clicking on hint button in stats bar
+function onHintClick() {
+    if (gGame.hints === 0 || gGame.firstClick || !gGame.isOn) return
     
-    const currCell = gBoard[i][j]
-
-    // skip already revealed/marked cells and don't play if game is over
-    if (currCell.isRevealed || currCell.isMarked || !gGame.isOn) return
-
-    // end game if clicking on a mine
-    if (currCell.isMine) {
-        // TODO: Should change behavior to trigger only when all lives are lost
-        updateLives(true)
-        renderClickedMine({i, j})
-        return
-    }
-
-    // reveal and render cell
-    revealCell(currCell)
-    renderRevealedCell({i, j}, currCell)
-    
-    // reveal neighboring non-mine cells mines count
-    if (currCell.minesAroundCount === 0) expandReveal({i, j})
-
-    // update score upon revealing cell
-    gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
-
-    checkGameOver(false)
+    gGame.hintMode = !gGame.hintMode
+    gElStats.hintsCounter.classList.add('hint-mode')
 }
 
-// start game, plant mines (not in first cell), set neighboring mines, and start timer
-function startGame(i, j) {
-    gGame.isOn = true
-    gGame.firstClick = false
-    placeMines({i, j})
-    setMinesNebsCount(gBoard)
+// upon spending hint - temporarily reveal selected cell & close-rang neighbors
+function hintReveal(pos) {
+    const positions = [pos, ...getNeighboringCells(pos)]
+    const cellsToRestore = []
 
-    const startTime = new Date().getTime();
+    for (let i = 0; i < positions.length; i++) {
+        const currPos = positions[i]
+        const currCell = gBoard[currPos.i][currPos.j]
 
-    gTimerInterval = setInterval(renderTimer, 1000, startTime, gElStats.timer);
+        // skip already revealed cells to avoid hiding them afterwards
+        if (currCell.isRevealed) continue
+
+        const elCell = document.querySelector(
+            `[data-pos="${currPos.i}-${currPos.j}"]`
+        )
+
+        elCell.classList.add('revealed')
+        elCell.style.backgroundColor = 'darkgray'
+
+        if (currCell.isMine) {
+            elCell.innerText = '💣'
+        } else {
+            elCell.innerText = currCell.minesAroundCount || ''
+        }
+
+        cellsToRestore.push(elCell)
+    }
+
+    // revet changes and un-reveal cells
+    setTimeout(() => {
+        for (let i = 0; i < cellsToRestore.length; i++) {
+            const elCell = cellsToRestore[i]
+
+            elCell.classList.remove('revealed')
+            elCell.style.backgroundColor = ''
+            elCell.innerText = ''
+        }
+    }, 1500)
+
+    gGame.hintMode = false
+    gElStats.hintsCounter.classList.remove('hint-mode')
 }
 
 // user can mark potential bombs
@@ -252,11 +291,12 @@ function expandReveal(pos) {
                 
         // skip mine/marked/revealed cells
         if (currCell.isMine || currCell.isRevealed || currCell.isMarked) continue
-        
-        revealCell(currCell)
-        renderRevealedCell(currCellIdx, currCell)
+    
+        // reveal & render cell, and score
+        revealCell(currCellIdx, currCell)
         gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
-            
+        
+        // check if executing recursion should occur
         if (currCell.minesAroundCount === 0) expandReveal({i : currCellIdx.i, j: currCellIdx.j})
     }
 }
