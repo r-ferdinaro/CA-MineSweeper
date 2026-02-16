@@ -9,7 +9,7 @@ function renderBoard(board) {
         for (let j = 0; j < board[i].length; j++) {
             const cell = board[i][j]
             
-            strHTML += `<td data-i="" data-pos="${i}-${j}" class="cell" onclick="onCellClicked(this, ${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
+            strHTML += `<td data-pos="${i}-${j}" class="cell" onclick="onCellClicked(${i}, ${j})" oncontextmenu="onCellMarked(this, event, ${i}, ${j})"></td>`
         }
         strHTML += '</tr>'
     }
@@ -24,7 +24,6 @@ function getBoardCells(board, firstCell) {
 
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
-            // TODO: ensure first clicked cell is not in res
             if (i === firstCell.i && j === firstCell.j) continue
             res.push({i, j})
         }
@@ -53,51 +52,6 @@ function getNeighboringCells(pos){
         }
     }
     return res
-}
-
-// reveal a cell & change game stats
-function revealCell(cell) {
-    cell.isRevealed = true
-
-    if (cell.isMarked) {
-        cell.isMarked = false
-        gGame.markedCount--
-    }
-
-    if (!cell.isMine) gGame.revealedCount++
-}
-
-// render revealed cell in UI
-function renderRevealedCell(pos, cell) {
-    const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
-
-    elCell.classList.add('revealed')
-    elCell.style.backgroundColor = 'darkgray'
-    elCell.innerText = cell.minesAroundCount || ''
-}
-
-// Show all mines upon losing game
-function revealMines() {
-    for (let i = 0; i < gGame.mineCells.length; i++) {
-        const currMine = gGame.mineCells[i]
-        const elCell = document.querySelector(`[data-pos="${currMine.i}-${currMine.j}"]`)
-
-        if (elCell.classList.contains('revealed')) continue
-        
-        elCell.classList.add('revealed')
-        elCell.innerText = '💣'
-        elCell.style.backgroundColor = 'darkgray' 
-    }
-}
-
-// Display live Timer values
-function renderTimer(startTime, elTimer) {
-    const currTime = new Date().getTime();
-    const timePassed = currTime - startTime;
-    const res = String(Math.floor(timePassed / 1000)).padStart(3, '0');
-    
-    gGame.secsPassed = +res
-    elTimer.innerText = res;
 }
 
 function getRandomInt(min, max) {

@@ -10,10 +10,15 @@
     <h1>MineSweeper</h1>
     <div class="game-container">
         <div class="stats-container">
-            <span class="score">000</span>
-            <span class="lives-count"></span>
-            <span class="player-status" onclick="onInit()"></span>
-            <span class="timer">000</span>
+            <div>
+                <span class="score">000</span>
+                <span class="player-status btn" onclick="onInit()"></span>
+                <span class="timer">000</span>
+            </div>
+            <div>
+                <span class="hints-count btn" onclick="onHintClick()"></span>
+                <span class="lives-count"></span>
+            </div>
         </div>
         <div>
             <table>
@@ -33,7 +38,8 @@
         <p>Ran Ferdinaro</p>
     </footer>
 
-    <script src="js/utils.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/gameutils.js"></script>
 </body>
 </html>
