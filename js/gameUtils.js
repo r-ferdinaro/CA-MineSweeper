@@ -10,7 +10,27 @@ function revealCell(pos, cell) {
     elCell.classList.add('revealed')
     elCell.style.backgroundColor = 'darkgray'
     elCell.innerText = cell.minesAroundCount || ''
+}
 
+
+// When the user clicks a cell with no mines around, reveal not only that cell, but also its neighbors. 
+function expandReveal(pos) {
+    const neighbors = getNeighboringCells(pos)
+
+    for (let i = 0; i < neighbors.length; i++) {
+        const currCellIdx = neighbors[i]
+        const currCell = gBoard[currCellIdx.i][currCellIdx.j]
+                
+        // skip mine/marked/revealed cells
+        if (currCell.isMine || currCell.isRevealed || currCell.isMarked) continue
+    
+        // reveal & render cell, and score
+        revealCell(currCellIdx, currCell)
+        gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
+        
+        // check if executing recursion should occur
+        if (currCell.minesAroundCount === 0) expandReveal({i : currCellIdx.i, j: currCellIdx.j})
+    }
 }
 
 // Show all mines upon losing game
@@ -25,6 +45,24 @@ function revealMines() {
         elCell.innerText = '💣'
         elCell.style.backgroundColor = 'darkgray' 
     }
+}
+
+// display clicked mines to user
+function renderClickedMine(pos){
+    const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
+
+    elCell.classList.toggle('revealed')
+    elCell.innerText = '💣'
+    elCell.style.backgroundColor = 'crimson'
+
+    if (gGame.lives === 0) return
+    
+    // hide mine if game is not over, and allow user to mark it
+    setTimeout( () => {
+        elCell.classList.toggle('revealed')
+        elCell.innerText = ''
+        elCell.style.backgroundColor = 'whitesmoke'
+    }, 1000)
 }
 
 // Display live Timer values

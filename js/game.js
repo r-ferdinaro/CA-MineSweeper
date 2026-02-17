@@ -148,7 +148,7 @@ function startGame(i, j) {
     gTimerInterval = setInterval(renderTimer, 1000, startTime, gElStats.timer);
 }
 
-// insert bombs into random cells (skip first cell)
+// insert mines into random cells (skip first cell)
 function placeMines(firstCell) {
    const cells = getBoardCells(gBoard, firstCell)
 
@@ -174,7 +174,7 @@ function setMinesNebsCount(board) {
     }
 }
 
-// count all neighboring bombs of a specific cell
+// count all neighboring mines of a specific cell
 function getCellNebsCount(pos) {
     const cells = getNeighboringCells(pos)
     let res = 0
@@ -239,7 +239,7 @@ function hintReveal(pos) {
     gElStats.hintsCounter.classList.remove('hint-mode')
 }
 
-// user can mark potential bombs
+// user can mark potential mines
 function onCellMarked(elCell, ev, i, j) {
     const currCell = gBoard[i][j]
     
@@ -263,51 +263,13 @@ function onCellMarked(elCell, ev, i, j) {
     elCell.classList.toggle('revealed')
 }
 
-// display clicked mines to user
-function renderClickedMine(pos){
-    const elCell = document.querySelector(`[data-pos="${pos.i}-${pos.j}"]`)
-
-    elCell.classList.toggle('revealed')
-    elCell.innerText = '💣'
-    elCell.style.backgroundColor = 'crimson'
-
-    if (gGame.lives === 0) return
-    
-    // hide mine if game is not over, and allow user to mark it
-    setTimeout( () => {
-        elCell.classList.toggle('revealed')
-        elCell.innerText = ''
-        elCell.style.backgroundColor = 'whitesmoke'
-    }, 1000)
-}
-
-// When the user clicks a cell with no mines around, reveal not only that cell, but also its neighbors. 
-function expandReveal(pos) {
-    const neighbors = getNeighboringCells(pos)
-
-    for (let i = 0; i < neighbors.length; i++) {
-        const currCellIdx = neighbors[i]
-        const currCell = gBoard[currCellIdx.i][currCellIdx.j]
-                
-        // skip mine/marked/revealed cells
-        if (currCell.isMine || currCell.isRevealed || currCell.isMarked) continue
-    
-        // reveal & render cell, and score
-        revealCell(currCellIdx, currCell)
-        gElStats.score.innerText = String(gGame.revealedCount).padStart(3, '0')
-        
-        // check if executing recursion should occur
-        if (currCell.minesAroundCount === 0) expandReveal({i : currCellIdx.i, j: currCellIdx.j})
-    }
-}
-
 // The game ends when all mines are marked, and all the other cells are revealed
 function checkGameOver(isMineClick) {
     let isWon = false
 
     // check if user finished game
     if (!isMineClick) {
-        // check if user marked all remaining bombs and clicked on all of the non-mine cells
+        // check if user marked all remaining mines and clicked on all of the non-mine cells
         const areAllMinesMarked = (gGame.markedCount === gLevel.mines)
         const areAllCellsRevealed = (gGame.revealedCount === ((gLevel.size ** 2) - gLevel.mines))
 
