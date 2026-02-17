@@ -11,24 +11,29 @@ table {
 
 .game-container {
     border: 1px solid black;
-    padding: 10px 10px;
+    padding: 10px;
     margin: 50px auto;
-    display: inline-block;
-    white-space: nowrap;
+    width: fit-content;
 }
 
 .stats-container {
-    margin: 0 auto 0;
-    font-size: x-large;
     border: 1px solid rgba(128, 128, 128, 0.576);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: x-large;
 }
 
 .stats-container div {
-    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
 }
 
 .stats-container span {
-    margin: 2px 1.5%;
+    padding: 4px 8px;
     padding: 2px;
     outline: 1px solid rgba(128, 128, 128, 0.576);
     cursor: default;
@@ -40,6 +45,10 @@ table {
 
 .hint-mode {
     background-color: #c2aa0b;
+}
+
+.stats-container .safe-click-counter {
+    outline: none;
 }
 
 .cell {
