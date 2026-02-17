@@ -2,10 +2,9 @@
 
 // BONUS
 // 1. Best score - store values per 6 best (players?) per level in local storage
-// 2. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
-// 3. Undo button - he user can undo (some of) his moves ??
-// 4. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
-// 5. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
+// 2. Undo button - he user can undo (some of) his moves ??
+// 3. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
+// 4. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 const gModes = {
     easy: {size: 4, mines: 2, lives: 1, hints: 3},
@@ -22,6 +21,7 @@ let gGame = {
     lives: 0,
     hints: 3,
     hintMode: false,
+    safeClicks: 3,
     revealedCount: 0,
     markedCount: 0,
     secsPassed: 0,
@@ -36,6 +36,7 @@ const gGameStatus = {
 
 let gBoard = []
 let gTimerInterval
+let gSafeClickActive = false
 
 const gElStatsContainer = document.querySelector('.stats-container')
 const gElStats = {
@@ -44,6 +45,8 @@ const gElStats = {
     timer: gElStatsContainer.querySelector('.timer'),
     hintsCounter: gElStatsContainer.querySelector('.hints-count'),
     livesCounter: gElStatsContainer.querySelector('.lives-count'),
+    safeClickBtn: gElStatsContainer.querySelector('.safe-click'),
+    safeClickCounter: gElStatsContainer.querySelector('.safe-click-counter'),
 }
 
 // Called when page loads 
@@ -59,6 +62,7 @@ function onInit(mode) {
         lives: gameMode.lives,
         hints: 3,
         hintMode: false,
+        safeClicks: 3,
         revealedCount: 0,
         markedCount: 0,
         secsPassed: 0,
@@ -68,6 +72,7 @@ function onInit(mode) {
     gBoard = []
     updateLivesCount(true)
     updateHintsCount(true)
+    gSafeClickActive = false
 
     // clear timer, lives, and build board
     clearInterval(gTimerInterval)
@@ -79,6 +84,8 @@ function onInit(mode) {
     gElStats.playerStatus.innerText = gGameStatus.alive
     gElStats.hintsCounter.classList.add('btn')
     gElStats.hintsCounter.classList.remove('hint-mode')
+    gElStats.safeClickBtn.classList.add('btn')
+    gElStats.safeClickCounter.innerText = '' + gGame.safeClicks
 }
 
 // Builds the board - Set some mines, Call setMinesNebsCount(), Return & render the created board
@@ -261,6 +268,42 @@ function onCellMarked(elCell, ev, i, j) {
         elCell.innerText = ''
     }
     elCell.classList.toggle('revealed')
+}
+
+// Provide 3 Safe Clicks to user
+function onSafeClick() {
+    // skip if not in game mode or no safe clicks remaining
+    if (gGame.firstClick || gGame.safeClicks === 0 || gSafeClickActive) return
+    gSafeClickActive = true
+
+    // get positions for non-mines and never revealed cells
+    const safeCells = []
+
+    for (let i = 0; i < gBoard.length; i++) {
+        for (let j = 0; j < gBoard[i].length; j++) {
+            const currCell = gBoard[i][j]
+            
+            if (!currCell.isMine && !currCell.isRevealed) safeCells.push({i, j})
+        }
+    }
+
+    const cellPos = safeCells[getRandomInt(0, safeCells.length)]
+    const cell = gBoard[cellPos.i][cellPos.j]
+    const elCell = document.querySelector(`[data-pos="${cellPos.i}-${cellPos.j}"]`)
+    
+    // hint cell is available for 1.5 seconds
+    gElStats.safeClickBtn.style.backgroundColor = 'green'
+    elCell.style.backgroundColor = 'green'
+    setTimeout(() => {
+        if (!cell.isRevealed) elCell.style.backgroundColor = 'whitesmoke'
+        gElStats.safeClickBtn.style.backgroundColor = 'white'
+        gSafeClickActive = false
+    }, 1500)
+
+    // render Safe clicks count
+    gGame.safeClicks--
+    if (gGame.safeClicks === 0) gElStats.safeClickBtn.classList.remove('btn')
+    gElStats.safeClickCounter.innerText = '' + gGame.safeClicks
 }
 
 // The game ends when all mines are marked, and all the other cells are revealed
