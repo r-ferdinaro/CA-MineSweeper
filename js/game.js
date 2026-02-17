@@ -2,10 +2,9 @@
 
 // BONUS
 // 1. Best score - store values per 6 best (players?) per level in local storage
-// 2. Safe Click button (3 times) - highlight an unrevealed random non-mine cell for 1.5 seconds
-// 3. Undo button - he user can undo (some of) his moves ??
-// 4. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
-// 5. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
+// 2. Undo button - he user can undo (some of) his moves ??
+// 3. Manually positioned mines mode = Allow user to position the mines (per count of mines) in a new game then start it
+// 4. MINE EXTERMINATOR button - will exterminate 3 random mines from game (remove from gBoard, decrease mine count, calculate neighbors, render revealed cells)
 
 const gModes = {
     easy: {size: 4, mines: 2, lives: 1, hints: 3},
